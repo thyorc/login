@@ -1,0 +1,11 @@
+Project "Login" {
+  database_type: 'PostgreSQL'
+  Note: ''
+}
+
+Table core.user {
+  ID serial [pk, not null, increment]
+  name varchar(100) [not null]
+  username varchar(100) [unique, not null]
+  password text [not null] 
+}
