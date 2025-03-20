@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
-type user struct {
-	username string
-	pass     string
+type users struct {
+	Username string `json:"username"`
+	Pass     string `json:"password"`
 }
 
 func hashPass(pass string) (string, error) {
@@ -21,11 +23,11 @@ func comparePass(hashedPass, pass string) bool {
 	return err != nil
 }
 
-func compareLogin(validate, login user) error {
-	if validate.username != login.username {
+func compareLogin(user, login users) error {
+	if user.Username != login.Username {
 		return fmt.Errorf("invalid username")
 	}
-	if comparePass(validate.pass, login.pass) {
+	if comparePass(user.Pass, login.Pass) {
 		return fmt.Errorf("invalid password")
 	}
 	return nil
@@ -37,20 +39,25 @@ func main() {
 		panic(err)
 	}
 
-	validate := user{username: "admin", pass: pass}
-	login := user{}
+	user := users{Username: "admin", Pass: pass}
 
-	fmt.Print("Enter to username: ")
-	fmt.Scanf("%s", &login.username)
+	r := gin.Default()
 
-	fmt.Print("Enter to pass: ")
-	fmt.Scanf("%s", &login.pass)
+	r.POST("/login", func(ctx *gin.Context) {
+		var login users
+		if err := ctx.ShouldBindJSON(&login); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Invalid data"})
+			return
+		}
 
-	err = compareLogin(validate, login)
-	if err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
-		return
-	}
+		err = compareLogin(user, login)
+		if err != nil {
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			return
+		}
 
-	fmt.Println("Success access!")
+		ctx.JSON(http.StatusOK, gin.H{"Hello": "World"})
+	})
+
+	r.Run(":8080")
 }

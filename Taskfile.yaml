@@ -1,0 +1,7 @@
+version: '3'
+
+tasks:
+  server:
+    desc: "Start backend server"
+    cmds:
+      - go run cmd/server/main.go
